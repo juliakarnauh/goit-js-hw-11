@@ -77,6 +77,7 @@ function infoSubmit(event, input, SearchParams) {
       }
       else if(images.length < SearchParams.get('per_page')){
         loadBtn.style.display = 'none';
+        Notiflix.Notify.info("We're sorry, but you've reached the end of search results." );
       } else {
         loadBtn.style.display = 'block';
       }
