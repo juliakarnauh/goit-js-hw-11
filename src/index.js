@@ -4,7 +4,7 @@ import SimpleLightbox from 'simplelightbox';
 // Додатковий імпорт стилів
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { updateGallery } from './update.js';
-import { searchQuery, getURL } from './search';
+import { SearchParams, getURL } from './search';
 const form = document.querySelector('#search-form');
 const input = document.querySelector('input');
 const galleryList = document.querySelector('.gallery');
@@ -33,18 +33,19 @@ async function getImages(URL) {
     } else {
       gallery = new SimpleLightbox('.gallery a').refresh();
       galleryList.innerHTML = updateGallery(images);
+      
       loadBtn.style.display = 'block';
       const totalHits = response.data.totalHits;
-      const currentPage = Number(searchQuery.get('page'));
-      const perPage = Number(searchQuery.get('per_page'));
+      const currentPage = Number(SearchParams.get('page'));
+      const perPage = Number(SearchParams.get('per_page'));
       const displayedImages = (currentPage - 1) * perPage + images.length;
-      if (displayedImages >= totalHits) {
-        loadBtn.style.display = 'none';
+      if (displayedImages > totalHits) {
         Notiflix.Notify.info(
           "We're sorry, but you've reached the end of search results."
         );
       }
       console.log(totalHits);
+      Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`)
     }
 
     return images;
@@ -54,24 +55,27 @@ async function getImages(URL) {
   }
 }
 
-function infoSubmit(event, input, searchQuery) {
+function infoSubmit(event, input, SearchParams) {
   event.preventDefault();
 
-  if (input.value !== searchQuery.get('q')) {
-    searchQuery.set('q', input.value);
-    searchQuery.set('page', 1);
+  if (input.value !== SearchParams.get('q')) {
+    SearchParams.set('q', input.value);
+    SearchParams.set('page', 1);
     currentPage = 1;
     galleryList.innerHTML = '';
     loadBtn.style.display = 'none';
   }
 
-  setsearchQuery(input, searchQuery);
-  const URL = getURL(searchQuery);
+  setSearchParams(input, SearchParams);
+  const URL = getURL(SearchParams);
   getImages(URL)
     .then(images => {
       galleryList.innerHTML = updateGallery(images);
       gallery = new SimpleLightbox('.gallery a').refresh();
       if (images.length === 0) {
+        loadBtn.style.display = 'none';
+      }
+      else if(images.length < SearchParams.get('per_page')){
         loadBtn.style.display = 'none';
       } else {
         loadBtn.style.display = 'block';
@@ -81,8 +85,8 @@ function infoSubmit(event, input, searchQuery) {
 }
 async function loadMoreImg() {
   currentPage++;
-  searchQuery.set('page', currentPage);
-  const URL = getURL(searchQuery);
+  SearchParams.set('page', currentPage);
+  const URL = getURL(SearchParams);
 
   try {
     gallery = new SimpleLightbox('.gallery a').refresh();
@@ -99,25 +103,17 @@ async function loadMoreImg() {
 
     galleryList.insertAdjacentHTML('beforeend', updateGallery(images));
     gallery = new SimpleLightbox('.gallery a').refresh();
-    if (images.length < searchQuery.get('per_page')) {
+    if (images.length < SearchParams.get('per_page')) {
       loadBtn.style.display = 'none';
     }
   } catch (error) {
     console.log(error);
   }
 }
-function setsearchQuery(input, searchQuery) {
-  searchQuery.set('q', input.value);
+function setSearchParams(input, SearchParams) {
+  SearchParams.set('q', input.value);
 }
 form.addEventListener('submit', event =>
-  infoSubmit(event, input, searchQuery)
+  infoSubmit(event, input, SearchParams)
 );
 loadBtn.addEventListener('click', loadMoreImg);
-const { height: cardHeight } = document
-  .querySelector('.gallery')
-  .firstElementChild.getBoundingClientRect();
-
-window.scrollBy({
-  top: cardHeight * 2,
-  behavior: 'smooth',
-});

@@ -1,5 +1,5 @@
 
- const searchQuery = new URLSearchParams({
+ const SearchParams = new URLSearchParams({
 	key: "34827086-10493c8e3456fbc81c5176912",
 	q: "",
 	image_type: "photo",
@@ -9,9 +9,9 @@
 	page: 1,
 });
 
-function getURL(searchQuery) {
-    return `https://pixabay.com/api/?${searchQuery.toString()}`;
+function getURL(SearchParams) {
+    return `https://pixabay.com/api/?${SearchParams.toString()}`;
   }
   
 
-  export {searchQuery, getURL}
+  export {SearchParams, getURL}
